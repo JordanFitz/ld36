@@ -7,6 +7,7 @@ import dsfml.graphics;
 import ludum.intro;
 import ludum.spritesheet;
 import ludum.util;
+import ludum.textobject;
 
 private static enum GAME_STATE { INTRO, MENU };
 
@@ -21,6 +22,7 @@ private static:
     Spritesheet _spritesheet;
     Texture _spritesheetTexture;
     Font _font;
+    TextObject _loadingText;
 
     bool _loaded = false;
     float _delta = 1.0f;
@@ -52,6 +54,7 @@ private static:
     {
         if(!_loaded)
         {
+            _loadingText.render();
             return;
         }
 
@@ -98,6 +101,14 @@ public static:
         _sfWindow.setFramerateLimit(60);
 
         _font = Util.loadFont("./res/font.ttf");
+
+        _loadingText = new TextObject("Loading...", _font, 35, Vector2f(0,0));
+        _loadingText.render();
+        _loadingText.color = Color.White;
+
+        _loadingText.position = Vector2f(
+            (_sfWindow.getSize() / 2) - _loadingText.size / 2
+        );
 
         _tick();
 
