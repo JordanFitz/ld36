@@ -47,6 +47,21 @@ public static:
 		return texture;
 	}
 
+    /**
+     * Attempt to load a font and make sure it was successful
+     * Params:
+     *  source = the location of the font file
+     * Returns: The resulting sf::Font
+     */
+    Font loadFont(string source)
+    {
+        Font font = new Font;
+
+        assert(font.loadFromFile(source), "Failed to load font from " ~ source);
+
+        return font;
+    }
+
 	/**
 	 * Make sure the given file exists and then parse it as JSON
 	 * Params:
