@@ -8,8 +8,12 @@ import ludum.intro;
 import ludum.spritesheet;
 import ludum.util;
 import ludum.textobject;
+import ludum.bounce;
 
-private static enum GAME_STATE { INTRO, MENU };
+/// An indicator of whether or not the game was compiled in debug mode
+public static const bool DEBUG_MODE = true;
+
+private static enum GAME_STATE { INTRO, MENU, PLAY };
 
 /// The wrapper class to contain the SFML RenderWindow and
 /// handle updates, rendering and events
@@ -22,7 +26,7 @@ private static:
     Spritesheet _spritesheet;
     Texture _spritesheetTexture;
     Font _font;
-    TextObject _loadingText;
+    TextObject _infoText;
 
     bool _loaded = false;
     float _delta = 1.0f;
@@ -34,6 +38,14 @@ private static:
         {
             _sfWindow.close();
             return;
+        }
+
+        if(event.type == Event.EventType.KeyReleased)
+        {
+            if(_state == GAME_STATE.MENU)
+            {
+                _state = GAME_STATE.PLAY;
+            }
         }
     }
 
@@ -48,19 +60,33 @@ private static:
         {
             _intro.update();
         }
+        else if(_state == GAME_STATE.MENU)
+        {
+            Bounce.update(_spritesheet.getSprite("title"));
+        }
     }
 
     void _render() 
     {
         if(!_loaded)
         {
-            _loadingText.render();
+            _infoText.render();
             return;
         }
 
         if(_state == GAME_STATE.INTRO)
         {
             _intro.render();
+        }
+        else if (_state == GAME_STATE.MENU)
+        {
+            _spritesheet.getSprite("title").render();
+            _infoText.render();
+        }
+        else if (_state == GAME_STATE.PLAY)
+        {
+            _spritesheet.getSprite("counter").render();
+            _spritesheet.getSprite("pc").render();
         }
     }
 
@@ -72,7 +98,7 @@ private static:
             _handleEvent(event);
         }
 
-        _sfWindow.clear();
+        _sfWindow.clear(Color(53, 64, 115));
 
         _update();
         _render();
@@ -85,6 +111,17 @@ private static:
     void _introFinished()
     {
         _state = GAME_STATE.MENU;
+
+        _infoText.content = "Press any key to start";
+        _infoText.textSize = 40;
+        _infoText.color = Color(53, 64, 115);
+        _infoText.render();
+        _infoText.color = Color.White;
+
+        _infoText.position = Vector2f(
+            (_sfWindow.getSize().x / 2) - _infoText.size.x / 2,
+            500.0f
+        );
     }
 
 public static:
@@ -102,17 +139,19 @@ public static:
 
         _font = Util.loadFont("./res/font.ttf");
 
-        _loadingText = new TextObject("Loading...", _font, 35, Vector2f(0,0));
-        _loadingText.render();
-        _loadingText.color = Color.White;
+        _infoText = new TextObject("Loading...", _font, 35, Vector2f(0,0));
+        _infoText.render();
+        _infoText.color = Color.White;
 
-        _loadingText.position = Vector2f(
-            (_sfWindow.getSize() / 2) - _loadingText.size / 2
+        _infoText.position = Vector2f(
+            (_sfWindow.getSize() / 2) - _infoText.size / 2
         );
 
         _tick();
 
         _spritesheetTexture = Util.loadTexture("./res/spritesheet.png");
+        _spritesheetTexture.setSmooth(true);
+
         _spritesheet = new Spritesheet(_spritesheetTexture);
         _spritesheet.fromJSON(parseJSON(import("spritesheet.json")));
 
@@ -122,6 +161,11 @@ public static:
         _intro.onDone = &_introFinished;
 
         _loaded = true;
+
+        static if(DEBUG_MODE)
+        {
+            _introFinished();
+        }
 
         while(_sfWindow.isOpen())
         {

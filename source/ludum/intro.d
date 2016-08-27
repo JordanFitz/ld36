@@ -19,9 +19,9 @@ private:
     Clock _timer;
     RectangleShape _background;
     AnimatedSprite _logo;
-    int opacity = 0;
-    long _lastMsecs = 0;
+
     bool _done = false;
+
     void function() _callback;
 
 public:
@@ -39,7 +39,7 @@ public:
              (_background.size / 2.0f) - Vector2f(125.0f, 125.0f)
          );
          
-         _logo.color = Color(255, 255, 255, cast(ubyte) opacity);
+         _logo.color = Color(255, 255, 255, 0);
 
          _timer = new Clock;
          _timer.restart();
@@ -55,13 +55,12 @@ public:
 
         long msecs = _timer.getElapsedTime().total!"msecs";
 
-        if(opacity < 255 && _lastMsecs != msecs)
+        if(msecs < 255)
         {
-            _lastMsecs = msecs;
-            _logo.color = Color(255, 255, 255, cast(ubyte) ++opacity);
+            _logo.color = Color(255, 255, 255, cast(ubyte) msecs);
         }
 
-        if(opacity >= 255)
+        if(msecs >= 255)
         {
             msecs -= 255;
 

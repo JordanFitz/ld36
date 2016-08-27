@@ -17,6 +17,7 @@ private:
 	Text _sfText;
 	Color _color;
 	Vector2f _position;
+    uint _textSize;
 
 public:
     /**
@@ -24,20 +25,38 @@ public:
      * Params:
      *  content = the actual string
      *  font = the sf::Font to use
+     *  size = the size of the text to render
      *  pos = the position of the TextObject
      */
 	this(string content, Font font, uint size, Vector2f pos)
 	{
 		_sfText = new Text(content, font, size);
+
 		position = pos;
+        textSize = size;
 	}
 
-    // The pixel size of the whole TextObject
+    /// The pixel size of the whole TextObject
 	@property
 	Vector2f size()
 	{
 		return Vector2f(_sfText.getGlobalBounds().width, _sfText.getGlobalBounds().height);
 	}
+
+    /// The text size
+    @property
+    {
+        uint textSize()
+        {
+            return _sfText.getCharacterSize();
+        }
+
+        uint textSize(uint newTextSize)
+        {
+            _sfText.setCharacterSize(newTextSize);
+            return newTextSize;
+        }
+    } 
 
     /// The pixel position of the TextObject
 	@property
