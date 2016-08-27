@@ -9,3 +9,4 @@ dub.selections.json
 *.exe
 res/
 libs/
+conf/
