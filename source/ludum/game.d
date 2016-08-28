@@ -1,6 +1,7 @@
 module ludum.game;
 
 import std.json: parseJSON;
+import std.stdio: writeln;
 
 import dsfml.graphics;
 
@@ -105,6 +106,8 @@ private static:
         {
             _spritesheet.getSprite("counter").render();
             _spritesheet.getSprite("pc").render();
+            _spritesheet.getSprite("cashregister").render();
+
             _pcWindow.render();
         }
 
@@ -150,6 +153,22 @@ private static:
         _pcWindow.show();
     }
 
+    void _cashRegisterClicked()
+    {
+        auto cashRegister = _spritesheet.getSprite("cashregister");
+
+        if(cashRegister.frame == 0)
+        {
+            cashRegister.frame = 1;
+            cashRegister.position = cashRegister.position - Vector2f(28.0f, 0.0f);
+        }
+        else
+        {
+            cashRegister.frame = 0;
+            cashRegister.position = cashRegister.position + Vector2f(28.0f, 0.0f);
+        }
+    }
+
 public static:
     /// Set up the window and being the game loop
     void initialize()
@@ -189,6 +208,9 @@ public static:
 
         _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("pc"));
         _clickableSprites[$ - 1].onClick = &_pcClicked;
+
+        _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("cashregister"));
+        _clickableSprites[$ - 1].onClick = &_cashRegisterClicked;
 
         _loaded = true;
 

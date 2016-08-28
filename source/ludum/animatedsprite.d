@@ -106,7 +106,7 @@ public:
 	 */
 	void render()
 	{
-		if(_animationTimer.getElapsedTime().total!"msecs" >= _interval)
+		if(_running && _animationTimer.getElapsedTime().total!"msecs" >= _interval)
 		{
 			_animationTimer.restart();
 			_currentFrame++;
@@ -127,9 +127,17 @@ public:
 
 	/// The current frame
 	@property
-	Sprite frame()
 	{
-		return _frames[_currentFrame];
+		uint frame()
+		{
+			return _currentFrame;
+		}
+
+		uint frame(uint newFrame)
+		{			
+			_currentFrame = newFrame;
+			return _currentFrame;
+		}
 	}
 
 	/// The string ID of the sprite
