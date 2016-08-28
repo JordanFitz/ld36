@@ -10,6 +10,8 @@ class ClickableSprite
 {
 private:
     AnimatedSprite _sprite;
+    bool _clicked = false;
+    void function() _callback;
 
 public:
     /**
@@ -35,8 +37,25 @@ public:
 
             if(Mouse.isButtonPressed(Mouse.Button.Left))
             {
+                if(!_clicked)
+                {
+                    _callback();
+                }
+
                 _sprite.color = Color(200, 200, 200);
+                _clicked = true;
+            }
+            else
+            {
+                _clicked = false;
             }
         }
+    }
+
+    /// The click callback
+    @property
+    void onClick(void function() callback)
+    {
+        _callback = callback;
     }
 }

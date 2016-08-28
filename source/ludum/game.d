@@ -32,7 +32,7 @@ private static:
     Spritesheet _spritesheet;
     TextObject _infoText;
 
-    Popup _TEST;
+    Popup _pcWindow;
 
     bool _loaded = false;
     float _delta = 1.0f;
@@ -105,7 +105,7 @@ private static:
         {
             _spritesheet.getSprite("counter").render();
             _spritesheet.getSprite("pc").render();
-            _TEST.render();
+            _pcWindow.render();
         }
 
         _spritesheet.getSprite("cursor").render();
@@ -143,6 +143,11 @@ private static:
             (_sfWindow.getSize().x / 2) - _infoText.size.x / 2,
             500.0f
         );
+    }
+
+    void _pcClicked()
+    {
+        _pcWindow.show();
     }
 
 public static:
@@ -183,15 +188,16 @@ public static:
         _intro.onDone = &_introFinished;
 
         _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("pc"));
+        _clickableSprites[$ - 1].onClick = &_pcClicked;
 
         _loaded = true;
 
-        _TEST = new Popup(POPUP_TYPE.ID, Vector2f(150, 150));
+        _pcWindow = new Popup(POPUP_TYPE.PC, Vector2f(550.0f, 250.0f));
 
         static if(DEBUG_MODE)
         {
-            _introFinished();
-            // _state = GAME_STATE.PLAY;
+            // _introFinished();
+            _state = GAME_STATE.PLAY;
         }
 
         while(_sfWindow.isOpen())

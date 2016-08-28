@@ -1,6 +1,6 @@
 module ludum.popup;
 
-import dsfml.graphics: Vector2f, Mouse, Vector2i, IntRect;
+import dsfml.graphics: Vector2f, Mouse, Vector2i, IntRect, FloatRect;
 
 import ludum.game;
 import ludum.animatedsprite;
@@ -18,7 +18,7 @@ private:
     Vector2f _initialPosition;
     POPUP_TYPE _type;
 
-    bool _visible = true;
+    bool _visible = false;
 
     Vector2i _mouseDownPosition;
 
@@ -26,18 +26,32 @@ private:
     {
         Vector2i mouse = Mouse.getPosition(Game.sf);
         Vector2i relativeMouse = mouse - _position;
+
         IntRect exitButton = IntRect(cast(int) _sprite.rect.width - 57, 16, 42, 28);
 
-        if(exitButton.contains(relativeMouse))
+        if(Mouse.isButtonPressed(Mouse.Button.Left) && exitButton.contains(relativeMouse))
         {
-            if(Mouse.isButtonPressed(Mouse.Button.Left))
+            if(_mouseDownPosition == Vector2i(-int.max, -int.max))
             {
                 _visible = false;
             }
         }
-        else if (_type != POPUP_TYPE.PC)
+        else
         {
-            if(_sprite.rect.contains(mouse))
+            FloatRect sensitiveArea;
+
+            if (_type == POPUP_TYPE.PC)
+            {
+                sensitiveArea = FloatRect(
+                    _position.x, _position.y, 315, 55
+                );
+            }
+            else
+            {
+                sensitiveArea = _sprite.rect;
+            }
+
+            if(sensitiveArea.contains(mouse) || _mouseDownPosition != Vector2i(-int.max, -int.max))
             {
                 if(Mouse.isButtonPressed(Mouse.Button.Left))
                 {
@@ -57,9 +71,25 @@ private:
                 }
             }
         }
-        else if (_type == POPUP_TYPE.PC)
+
+        if(_position.x < 0.0f)
         {
-            IntRect windowChrome;
+            _position = Vector2f(0.0f, _position.y);
+        }
+
+        if(_position.y < 0.0f)
+        {
+            _position = Vector2f(_position.x, 0.0f);
+        }
+
+        if(_position.x > Game.sf.getSize().x - _sprite.rect.width)
+        {
+            _position = Vector2f(Game.sf.getSize().x - _sprite.rect.width, _position.y);
+        }
+
+        if(_position.y > Game.sf.getSize().y - _sprite.rect.height)
+        {
+            _position = Vector2f(_position.x, Game.sf.getSize().y - _sprite.rect.height);
         }
     }
 
@@ -94,6 +124,12 @@ public:
             
             default: assert(0);
         }
+    }
+
+    /// Set the popup to visible
+    void show()
+    {
+        _visible = true;
     }
 
     /// Render the window
