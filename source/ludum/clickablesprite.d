@@ -2,6 +2,7 @@ module ludum.clickablesprite;
 
 import ludum.game;
 import ludum.animatedsprite;
+import ludum.popup: POPUP_TYPE;
 
 import dsfml.graphics: Vector2i, Mouse, Color;
 
@@ -27,6 +28,11 @@ public:
     /// Update the sprite
     void update()
     {
+        if(Game.currentWindow != POPUP_TYPE.NONE)
+        {
+            return;
+        }
+
         _sprite.color = Color(225, 225, 225);
 
         Vector2i mouse = Mouse.getPosition(Game.sf);

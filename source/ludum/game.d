@@ -4,6 +4,7 @@ import std.json: parseJSON;
 import std.stdio: writeln, write;
 
 import dsfml.graphics;
+import dsfml.audio: Sound;
 
 import ludum.intro;
 import ludum.spritesheet;
@@ -28,6 +29,8 @@ private static:
     RenderWindow _sfWindow;
     Texture _spritesheetTexture;
     Font _font;
+    Sound _cashRegisterSound;
+    Sprite _background;
 
     Intro _intro;
     Spritesheet _spritesheet;
@@ -94,14 +97,14 @@ private static:
         }
         else if (_state == GAME_STATE.PLAY)
         {
-            foreach(sprite; _clickableSprites)
-            {
-                sprite.update();
-            }
-
             for(int i = _windows.length - 1; i >= 0; i--)
             {
                 _windows[i].update();
+            }
+
+            foreach(sprite; _clickableSprites)
+            {
+                sprite.update();
             }
         }
 
@@ -127,10 +130,14 @@ private static:
         }
         else if (_state == GAME_STATE.PLAY)
         {
+            _sfWindow.draw(_background);
+
+            _spritesheet.getSprite("title").render();
             _spritesheet.getSprite("counter").render();
             _spritesheet.getSprite("pc").render();
             _spritesheet.getSprite("cashregister").render();
             _spritesheet.getSprite("vhs").render();
+            _spritesheet.getSprite("id").render();
 
             foreach(window; _windows)
             {
@@ -200,6 +207,9 @@ private static:
             (_sfWindow.getSize().x / 2) - _infoText.size.x / 2,
             500.0f
         );
+
+        _spritesheet.getSprite("title").scale = 0.5;
+        _spritesheet.getSprite("title").position = Vector2f(94.25f, 50.0f);
     }
 
     void _pcClicked()
@@ -215,6 +225,7 @@ private static:
         {
             cashRegister.frame = 1;
             cashRegister.position = cashRegister.position - Vector2f(28.0f, 0.0f);
+            _cashRegisterSound.play();
         }
         else
         {
@@ -228,11 +239,17 @@ private static:
         _vhsWindow.show();
     }
 
+    void _idClicked()
+    {
+        _idWindow.show();
+    }
+
 public static:
     /// Set up the window and being the game loop
     void initialize()
     {
         _clock = new Clock;
+        _background = new Sprite;
         
         _sfWindow = new RenderWindow(
             VideoMode(1280, 720), "Mockbuster",
@@ -243,6 +260,10 @@ public static:
         _sfWindow.setMouseCursorVisible(false);
 
         _font = Util.loadFont("./res/font.ttf");
+        _cashRegisterSound = Util.loadSound("./res/cashregister.wav");
+        _background.setTexture(Util.loadTexture("./res/background.png"));
+
+        _cashRegisterSound.volume = 20;
 
         _infoText = new TextObject("Loading...", _font, 35, Vector2f(0,0));
         _infoText.render();
@@ -274,11 +295,14 @@ public static:
         _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("vhs"));
         _clickableSprites[$ - 1].onClick = &_vhsClicked;
 
+        _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("id"));
+        _clickableSprites[$ - 1].onClick = &_idClicked;
+
         _loaded = true;
 
-        _pcWindow = new Popup(POPUP_TYPE.PC, Vector2f(550.0f, 250.0f));
-        _vhsWindow = new Popup(POPUP_TYPE.VHS, Vector2f(350.0f, 250.0f));
-        _idWindow = new Popup(POPUP_TYPE.ID, Vector2f(200.0f, 250.0f));
+        _pcWindow = new Popup(POPUP_TYPE.PC, Vector2f(825.0f, 100.0f));
+        _vhsWindow = new Popup(POPUP_TYPE.VHS, Vector2f(475.0f, 250.0f));
+        _idWindow = new Popup(POPUP_TYPE.ID, Vector2f(100.0f, 150.0f));
 
         _windows[0] = _pcWindow;
         _windows[1] = _vhsWindow;
@@ -286,7 +310,7 @@ public static:
 
         static if(DEBUG_MODE)
         {
-            // _introFinished();
+            _introFinished();
             _state = GAME_STATE.PLAY;
         }
 

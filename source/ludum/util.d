@@ -7,6 +7,7 @@ import std.algorithm: cmp;
 import std.math: floor;
 
 import dsfml.graphics;
+import dsfml.audio: Sound, SoundBuffer;
 
 /**
  * A utility class containing functions that are useful in multiple cases, 
@@ -61,6 +62,24 @@ public static:
 
         return font;
     }
+
+	/**
+	 * Attempt to load a sound and make sure it was successful
+	 * Params:
+	 *  source = the location of the sound file
+	 * Returns: The resulting sf::Sound
+	 */
+	Sound loadSound(string source)
+	{
+		SoundBuffer buffer = new SoundBuffer;
+
+		assert(buffer.loadFromFile(source), "Failed to load sound from " ~ source);
+
+		Sound sound = new Sound;
+		sound.setBuffer(buffer);
+
+		return sound;
+	}
 
 	/**
 	 * Make sure the given file exists and then parse it as JSON
