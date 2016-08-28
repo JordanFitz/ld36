@@ -7,7 +7,7 @@ import ludum.animatedsprite;
 
 import std.stdio: writeln;
 
-public static enum POPUP_TYPE { PC, VHS, ID };
+public static enum POPUP_TYPE { NONE = -1, PC, VHS, ID };
 
 /// A class to manage a draggable in game "window" with an exit button
 class Popup
@@ -24,6 +24,11 @@ private:
 
     void _update()
     {
+        if(!_visible || (Game.currentWindow != POPUP_TYPE.NONE && Game.currentWindow != _type))
+        {
+            return;
+        }
+
         Vector2i mouse = Mouse.getPosition(Game.sf);
         Vector2i relativeMouse = mouse - _position;
 
@@ -55,6 +60,8 @@ private:
             {
                 if(Mouse.isButtonPressed(Mouse.Button.Left))
                 {
+                    Game.currentWindow = _type;
+
                     if(_mouseDownPosition == Vector2i(-int.max, -int.max))
                     {
                         _mouseDownPosition = mouse;
@@ -62,13 +69,19 @@ private:
                     else if(_mouseDownPosition != mouse)
                     {
                         _position = _initialPosition - (_mouseDownPosition - mouse);
-                    }
+                    }                    
                 }
                 else
                 {
+                    Game.currentWindow = POPUP_TYPE.NONE;
+                    
                     _mouseDownPosition = Vector2i(-int.max, -int.max);
                     _initialPosition = _position;
                 }
+            }
+            else
+            {
+                Game.currentWindow = POPUP_TYPE.NONE;
             }
         }
 
@@ -140,9 +153,20 @@ public:
             return;
         }
 
-        _update();
-
         _sprite.position = _position;
         _sprite.render();
+    }
+
+    /// Update the window
+    void update()
+    {
+        _update();
+    }
+
+    /// Public access to the popup's type
+    @property
+    POPUP_TYPE type()
+    {
+        return _type;
     }
 }

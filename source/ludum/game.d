@@ -1,7 +1,7 @@
 module ludum.game;
 
 import std.json: parseJSON;
-import std.stdio: writeln;
+import std.stdio: writeln, write;
 
 import dsfml.graphics;
 
@@ -34,7 +34,14 @@ private static:
     TextObject _infoText;
 
     Popup _pcWindow;
+    Popup _idWindow;
+    Popup _vhsWindow;
 
+    Popup[3] _windows;
+
+    POPUP_TYPE _currentWindow = POPUP_TYPE.NONE;
+
+    bool _windowOrderChanged = false;
     bool _loaded = false;
     float _delta = 1.0f;
 
@@ -66,6 +73,17 @@ private static:
             return;
         }
 
+        if(!Mouse.isButtonPressed(Mouse.Button.Left))
+        {
+            _currentWindow = POPUP_TYPE.NONE;
+        }
+
+        if(_windowOrderChanged)
+        {
+            _orderWindows();
+            _windowOrderChanged = false;
+        }
+
         if(_state == GAME_STATE.INTRO)
         {
             _intro.update();
@@ -79,6 +97,11 @@ private static:
             foreach(sprite; _clickableSprites)
             {
                 sprite.update();
+            }
+
+            for(int i = _windows.length - 1; i >= 0; i--)
+            {
+                _windows[i].update();
             }
         }
 
@@ -107,8 +130,12 @@ private static:
             _spritesheet.getSprite("counter").render();
             _spritesheet.getSprite("pc").render();
             _spritesheet.getSprite("cashregister").render();
+            _spritesheet.getSprite("vhs").render();
 
-            _pcWindow.render();
+            foreach(window; _windows)
+            {
+                window.render();
+            }
         }
 
         _spritesheet.getSprite("cursor").render();
@@ -130,6 +157,33 @@ private static:
         _delta = _clock.restart().total!"msecs" / 250.0f;
 
         _sfWindow.display();
+    }
+
+    void _orderWindows()
+    {
+        if(_currentWindow == POPUP_TYPE.NONE)
+        {
+            return;
+        }
+
+        foreach(i, window; _windows)
+        {
+            if(window.type == _currentWindow)
+            {
+                Popup moveWindow = window;
+
+                _windows[i] = null;
+
+                for(uint j = i; j < _windows.length - 1; j++)
+                {
+                    _windows[j] = _windows[j + 1];
+                }
+
+                _windows[$ - 1] = moveWindow;
+
+                break;
+            }
+        }
     }
 
     void _introFinished()
@@ -167,6 +221,11 @@ private static:
             cashRegister.frame = 0;
             cashRegister.position = cashRegister.position + Vector2f(28.0f, 0.0f);
         }
+    }
+
+    void _vhsClicked()
+    {
+        _vhsWindow.show();
     }
 
 public static:
@@ -212,9 +271,18 @@ public static:
         _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("cashregister"));
         _clickableSprites[$ - 1].onClick = &_cashRegisterClicked;
 
+        _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("vhs"));
+        _clickableSprites[$ - 1].onClick = &_vhsClicked;
+
         _loaded = true;
 
         _pcWindow = new Popup(POPUP_TYPE.PC, Vector2f(550.0f, 250.0f));
+        _vhsWindow = new Popup(POPUP_TYPE.VHS, Vector2f(350.0f, 250.0f));
+        _idWindow = new Popup(POPUP_TYPE.ID, Vector2f(200.0f, 250.0f));
+
+        _windows[0] = _pcWindow;
+        _windows[1] = _vhsWindow;
+        _windows[2] = _idWindow;
 
         static if(DEBUG_MODE)
         {
@@ -247,5 +315,21 @@ public static:
     Spritesheet spritesheet()
     {
         return _spritesheet;
+    }
+
+    /// Public access to the indicator of which window is active
+    @property
+    {
+        POPUP_TYPE currentWindow()
+        {
+            return _currentWindow;
+        }
+
+        POPUP_TYPE currentWindow(POPUP_TYPE newWindow)
+        {
+            _currentWindow = newWindow;
+            _windowOrderChanged = true;
+            return _currentWindow;
+        }
     }
 }
