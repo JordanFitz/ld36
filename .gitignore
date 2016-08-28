@@ -10,3 +10,6 @@ dub.selections.json
 res/
 libs/
 conf/
+out/
+out.bat
+game.zip

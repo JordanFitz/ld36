@@ -9,6 +9,8 @@ import ludum.spritesheet;
 import ludum.util;
 import ludum.textobject;
 import ludum.bounce;
+import ludum.clickablesprite;
+import ludum.popup;
 
 /// An indicator of whether or not the game was compiled in debug mode
 public static const bool DEBUG_MODE = true;
@@ -20,16 +22,23 @@ private static enum GAME_STATE { INTRO, MENU, PLAY };
 static class Game
 {
 private static:
-    RenderWindow _sfWindow;
     Clock _clock;
-    Intro _intro;
-    Spritesheet _spritesheet;
+
+    RenderWindow _sfWindow;
     Texture _spritesheetTexture;
     Font _font;
+
+    Intro _intro;
+    Spritesheet _spritesheet;
     TextObject _infoText;
+
+    Popup _TEST;
 
     bool _loaded = false;
     float _delta = 1.0f;
+
+    ClickableSprite[] _clickableSprites;
+
     GAME_STATE _state;
 
     void _handleEvent(Event event)
@@ -64,6 +73,15 @@ private static:
         {
             Bounce.update(_spritesheet.getSprite("title"));
         }
+        else if (_state == GAME_STATE.PLAY)
+        {
+            foreach(sprite; _clickableSprites)
+            {
+                sprite.update();
+            }
+        }
+
+        _spritesheet.getSprite("cursor").position = Vector2f(Mouse.getPosition(_sfWindow));
     }
 
     void _render() 
@@ -87,7 +105,10 @@ private static:
         {
             _spritesheet.getSprite("counter").render();
             _spritesheet.getSprite("pc").render();
+            _TEST.render();
         }
+
+        _spritesheet.getSprite("cursor").render();
     }
 
     void _tick()
@@ -136,6 +157,7 @@ public static:
         );
 
         _sfWindow.setFramerateLimit(60);
+        _sfWindow.setMouseCursorVisible(false);
 
         _font = Util.loadFont("./res/font.ttf");
 
@@ -160,11 +182,16 @@ public static:
         _intro = new Intro;
         _intro.onDone = &_introFinished;
 
+        _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("pc"));
+
         _loaded = true;
+
+        _TEST = new Popup(POPUP_TYPE.ID, Vector2f(150, 150));
 
         static if(DEBUG_MODE)
         {
             _introFinished();
+            // _state = GAME_STATE.PLAY;
         }
 
         while(_sfWindow.isOpen())
