@@ -1,9 +1,10 @@
 module ludum.popup;
 
-import dsfml.graphics: Vector2f, Mouse, Vector2i, IntRect, FloatRect;
+import dsfml.graphics: Vector2f, Mouse, Vector2i, IntRect, FloatRect, Color;
 
 import ludum.game;
 import ludum.animatedsprite;
+import ludum.textobject;
 
 import std.stdio: writeln;
 
@@ -21,6 +22,9 @@ private:
     bool _visible = false;
 
     Vector2i _mouseDownPosition;
+
+    TextObject[] _text;
+    AnimatedSprite[] _childSprites;
 
     void _update()
     {
@@ -139,6 +143,44 @@ public:
         }
     }
 
+    /**
+     * 
+     */
+    void setText(string[] lines)
+    {
+        _text = [];
+
+        if(_type == POPUP_TYPE.ID)
+        {
+            _text ~= new TextObject("USA", Game.font, 20, Vector2f(155.0f, 68.0f));
+            _text[$-1].color = Color(50, 50, 50);
+        }
+
+        foreach(i, line; lines)
+        {
+            Vector2f position = Vector2f(0.0f, 0.0f);
+
+            if(_type == POPUP_TYPE.ID)
+            {
+                if(i == 0) 
+                {
+                    position = Vector2f(155.0f, 112.0f);
+                }
+                else if (i == 1)
+                {
+                    position = Vector2f(155.0f, 127.0f);
+                }
+                else
+                {
+                    position = Vector2f(155.0f, 168.0f);
+                }
+            }
+
+            _text ~= new TextObject(line, Game.font, 20, position);
+            _text[$-1].color = Color(50, 50, 50);
+        }
+    }
+
     /// Set the popup to visible
     void show()
     {
@@ -155,6 +197,15 @@ public:
 
         _sprite.position = _position;
         _sprite.render();
+
+        foreach(object; _text)
+        {
+            Vector2f tempPosition = object.position;
+
+            object.position = _position + tempPosition;
+            object.render(false);
+            object.position = tempPosition;
+        }
     }
 
     /// Update the window

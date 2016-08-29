@@ -53,22 +53,24 @@ public:
             return;
         }
 
-        long msecs = _timer.getElapsedTime().total!"msecs";
+        const long msecs = _timer.getElapsedTime().total!"msecs";
 
-        if(msecs < 255)
+        if(msecs < 2000)
         {
-            _logo.color = Color(255, 255, 255, cast(ubyte) msecs);
+            if(_logo.color.a + 8 <= 255)
+            {
+                _logo.color = Color(255, 255, 255, cast(ubyte)(_logo.color.a + 8));
+            }
+            else
+            {
+                _logo.color = Color(255, 255, 255);
+            }
         }
 
-        if(msecs >= 255)
+        if(msecs >= 5000)
         {
-            msecs -= 255;
-
-            if(msecs >= 3000)
-            {
-                _done = true;
-                _callback();
-            }
+            _done = true;
+            _callback();
         }
     }    
 

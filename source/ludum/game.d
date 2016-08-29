@@ -13,9 +13,10 @@ import ludum.textobject;
 import ludum.bounce;
 import ludum.clickablesprite;
 import ludum.popup;
+import ludum.customer;
 
 /// An indicator of whether or not the game was compiled in debug mode
-public static const bool DEBUG_MODE = true;
+public static const bool DEBUG_MODE = false;
 
 private static enum GAME_STATE { INTRO, MENU, PLAY };
 
@@ -46,6 +47,8 @@ private static:
 
     bool _windowOrderChanged = false;
     bool _loaded = false;
+    bool _hasFocus = true;
+    bool _overlayDrawn = false;
     float _delta = 1.0f;
 
     ClickableSprite[] _clickableSprites;
@@ -65,13 +68,33 @@ private static:
             if(_state == GAME_STATE.MENU)
             {
                 _state = GAME_STATE.PLAY;
+
+                _spritesheet.getSprite("title").scale = 0.5;
+                _spritesheet.getSprite("title").position = Vector2f(94.25f, 50.0f);
             }
+        }
+
+        if(event.type == Event.EventType.LostFocus)
+        {
+            _hasFocus = false;
+        }
+        
+        if(event.type == Event.EventType.GainedFocus)
+        {
+            _hasFocus = true;
         }
     }
 
     void _update()
     {
         if(!_loaded)
+        {
+            return;
+        }
+
+        _spritesheet.getSprite("cursor").position = Vector2f(Mouse.getPosition(_sfWindow));
+
+        if(!_hasFocus)
         {
             return;
         }
@@ -107,8 +130,6 @@ private static:
                 sprite.update();
             }
         }
-
-        _spritesheet.getSprite("cursor").position = Vector2f(Mouse.getPosition(_sfWindow));
     }
 
     void _render() 
@@ -143,6 +164,13 @@ private static:
             {
                 window.render();
             }
+        }
+
+        if (!_hasFocus)
+        {
+            RectangleShape overlay = new RectangleShape(Vector2f(_sfWindow.getSize()));
+            overlay.fillColor = Color(0, 0, 0, 200);
+            _sfWindow.draw(overlay);
         }
 
         _spritesheet.getSprite("cursor").render();
@@ -207,9 +235,6 @@ private static:
             (_sfWindow.getSize().x / 2) - _infoText.size.x / 2,
             500.0f
         );
-
-        _spritesheet.getSprite("title").scale = 0.5;
-        _spritesheet.getSprite("title").position = Vector2f(94.25f, 50.0f);
     }
 
     void _pcClicked()
@@ -308,6 +333,9 @@ public static:
         _windows[1] = _vhsWindow;
         _windows[2] = _idWindow;
 
+        Customer test = new Customer;
+        _idWindow.setText([test.firstName, test.lastName, test.birth]);
+
         static if(DEBUG_MODE)
         {
             _introFinished();
@@ -355,5 +383,12 @@ public static:
             _windowOrderChanged = true;
             return _currentWindow;
         }
+    }
+
+    /// Public access to the main font
+    @property
+    Font font()
+    {
+        return _font;
     }
 }

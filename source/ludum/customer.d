@@ -1,4 +1,4 @@
-module ludum.costumer;
+module ludum.customer;
 
 import std.random: uniform;
 import std.format: format;
@@ -12,17 +12,19 @@ private static string[12] _months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "
 class Customer
 {
 private:
-    string _name;
+    string _firstName;
+    string _lastName;
     string _birth;
 
 public:
     /// Construct a new customer
     this()
     {
-        _name = format("%s %s", _firstNames[uniform(0, $)], _lastNames[uniform(0, $)]);
+        _firstName = _firstNames[uniform(0, $)];
+        _lastName = _lastNames[uniform(0, $)];
 
         const uint month = uniform(1, 13);
-        const uint year = uniform(1916, 2007);
+        const uint year = uniform(1960, 2007);
         uint day;
 
         if(month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12)
@@ -45,6 +47,23 @@ public:
             }
         }
 
-        _birth = format("%d %s %d", day, _months[month], year);
+        _birth = format("%d %s %d", day, _months[month-1], year);
+    }
+
+    @property
+    string firstName()
+    {
+        return _firstName;
+    }
+
+    @property lastName()
+    {
+        return _lastName;
+    }
+
+    @property
+    string birth()
+    {
+        return _birth;
     }
 }
