@@ -5,8 +5,10 @@ import dsfml.graphics: Vector2f, Mouse, Vector2i, IntRect, FloatRect, Color;
 import ludum.game;
 import ludum.animatedsprite;
 import ludum.textobject;
+import ludum.daycycle;
+import ludum.vhs;
 
-import std.stdio: writeln;
+import std.format: format;
 
 public static enum POPUP_TYPE { NONE = -1, PC, VHS, ID };
 
@@ -25,6 +27,8 @@ private:
 
     TextObject[] _text;
     AnimatedSprite[] _childSprites;
+
+    VHS _vhs;
 
     void _update()
     {
@@ -111,6 +115,9 @@ private:
     }
 
 public:
+    ///
+    static DayCycle dayCycle = null;
+
     /**
      * Construct a new Popup
      * Params:
@@ -140,6 +147,11 @@ public:
                 break;
             
             default: assert(0);
+        }
+
+        if(dayCycle is null)
+        {
+            dayCycle = new DayCycle;
         }
     }
 
@@ -181,10 +193,29 @@ public:
         }
     }
 
+    void setText(TextObject[] text)
+    {
+        _text = text;
+    }
+
+    /**
+     *
+     */
+    void setChildSprites(AnimatedSprite[] children)
+    {
+        _childSprites = children;
+    }
+
     /// Set the popup to visible
     void show()
     {
         _visible = true;
+    }
+
+    /// Set the popup to invisible
+    void hide()
+    {
+        _visible = false;
     }
 
     /// Render the window
@@ -200,11 +231,55 @@ public:
 
         foreach(object; _text)
         {
-            Vector2f tempPosition = object.position;
+            if(_type == POPUP_TYPE.PC) break;
+            const Vector2f tempPosition = object.position;
 
             object.position = _position + tempPosition;
             object.render(false);
             object.position = tempPosition;
+        }
+
+        if(_type == POPUP_TYPE.ID)
+        {
+            foreach(child; _childSprites)
+            {
+                child.scale = 0.5f;
+            }
+
+            const Vector2f offset = Vector2f(33.0f, 58.0f);
+            AnimatedSprite child = _childSprites[0];
+
+            child.position = _position + offset + Vector2f((52.0f - child.rect.width / 2.0f), (70.0f - child.rect.height / 2.0f));
+            child.render();
+
+            for(uint i = 1; i < _childSprites.length; i++)
+            {
+                _childSprites[i].position = child.position;
+                _childSprites[i].render();
+            }
+        }
+        else if (_type == POPUP_TYPE.PC)
+        {
+            dayCycle.renderTime(_position + Vector2f(35.0f, 70.0f));
+
+            TextObject goal = new TextObject(format("Goal: $%d.00", dayCycle.goal), Game.font, 27, Vector2f(0,0));
+            goal.color = Color.Transparent;
+            goal.render(false);
+            goal.color = Color(0,213,34); 
+            goal.position = _position + Vector2f(35.0f, 332 - 60 - goal.size.y);
+            goal.render(false); 
+
+            TextObject money = _text[0];
+
+            money.color = Color.Transparent;
+            money.render(false);
+            money.color = Color(0,213,34); 
+            money.position = _position + Vector2f(35.0f, 332 - 35 - money.size.y);
+            money.render(false); 
+        }
+        else if(_type == POPUP_TYPE.VHS)
+        {
+            _vhs.render(_position);
         }
     }
 
@@ -219,5 +294,11 @@ public:
     POPUP_TYPE type()
     {
         return _type;
+    }
+
+    ///
+    void setVHS(VHS vhs)
+    {
+        _vhs = vhs;
     }
 }

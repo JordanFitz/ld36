@@ -33,13 +33,13 @@ public:
             return;
         }
 
-        _sprite.color = Color(225, 225, 225);
+        _sprite.color = Color(225, 225, 225, _sprite.color.a);
 
         Vector2i mouse = Mouse.getPosition(Game.sf);
 
-        if(_sprite.rect.contains(mouse))
+        if(_sprite.rect.contains(mouse) && _sprite.color.a == 255)
         {
-            _sprite.color = Color(255, 255, 255);
+            _sprite.color = Color(255, 255, 255, _sprite.color.a);
 
             if(Mouse.isButtonPressed(Mouse.Button.Left))
             {
@@ -48,7 +48,7 @@ public:
                     _callback();
                 }
 
-                _sprite.color = Color(200, 200, 200);
+                _sprite.color = Color(200, 200, 200, _sprite.color.a);
                 _clicked = true;
             }
             else

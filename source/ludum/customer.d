@@ -10,6 +10,7 @@ import ludum.animatedsprite;
 import ludum.game;
 import ludum.spritesheet;
 import ludum.util;
+import ludum.vhs;
 
 private static
 {
@@ -36,6 +37,8 @@ private:
 
     static Spritesheet _faceFeatures = null;
 
+    VHS _vhs;
+
 public:
     /// Construct a new customer
     this()
@@ -50,7 +53,8 @@ public:
         _lastName = _lastNames[uniform(0, $)];
 
         const uint month = uniform(1, 13);
-        const uint year = uniform(1960, 2007);
+        const uint year = uniform(1920, 1981);
+        
         uint day;
 
         if(month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12)
@@ -73,7 +77,7 @@ public:
             }
         }
 
-        _birth = format("%d %s %d", day, _months[month-1], year);
+        _birth = format("%d", year);
 
         if(uniform(0, 10) == 0)
         {
@@ -96,6 +100,8 @@ public:
 
         Game.spritesheet.getSprite("body").position = Vector2f(-200.0f, 400.0f);
         Game.spritesheet.getSprite("head").position = Vector2f(-208.0f, 245.0f);
+
+        _vhs = new VHS;
     }
 
     /// Move the sprites if the customer is walking
@@ -107,9 +113,6 @@ public:
 
             Game.spritesheet.getSprite("body").position =
                 Game.spritesheet.getSprite("body").position + amount;
-
-            Game.spritesheet.getSprite("head").position =
-                Game.spritesheet.getSprite("head").position + amount;
 
             foreach(feature; _face)
             {
@@ -144,7 +147,10 @@ public:
     /// Render the customer and his features
     void render()
     {
-        Game.spritesheet.getSprite("head").scale = 1.0;
+        Game.spritesheet.getSprite("head").scale = 1.0f;
+
+        Game.spritesheet.getSprite("head").position = 
+            Game.spritesheet.getSprite("body").position - Vector2f(8.0f, 155.0f);
 
         Game.spritesheet.getSprite("body").render();
         Game.spritesheet.getSprite("head").render();
@@ -152,7 +158,7 @@ public:
         foreach(feature; _face)
         {
             feature.position = Game.spritesheet.getSprite("head").position;
-            feature.scale = 1.0;
+            feature.scale = 1.0f;
             feature.render();
         }
     }
@@ -202,5 +208,12 @@ public:
     AnimatedSprite[] face()
     {
         return _face;
+    }
+
+    ///
+    @property
+    VHS vhs()
+    {
+        return _vhs;
     }
 }

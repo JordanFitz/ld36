@@ -2,9 +2,10 @@ module ludum.game;
 
 import std.json: parseJSON;
 import std.stdio: writeln, write;
+import std.format: format;
 
 import dsfml.graphics;
-import dsfml.audio: Sound;
+import dsfml.audio: Sound, Music;
 
 import ludum.intro;
 import ludum.spritesheet;
@@ -14,9 +15,11 @@ import ludum.bounce;
 import ludum.clickablesprite;
 import ludum.popup;
 import ludum.customer;
+import ludum.daycycle;
+import ludum.fadingsprite;
 
 /// An indicator of whether or not the game was compiled in debug mode
-public static const bool DEBUG_MODE = true;
+public static const bool DEBUG_MODE = false;
 
 private static enum GAME_STATE { INTRO, MENU, PLAY };
 
@@ -54,8 +57,13 @@ private static:
     float _delta = 1.0f;
 
     ClickableSprite[] _clickableSprites;
+    FadingSprite[] _fadingSprites;
 
     GAME_STATE _state;
+
+    uint _money;
+
+    Sound _music;
 
     void _handleEvent(Event event)
     {
@@ -140,6 +148,11 @@ private static:
                 sprite.update();
             }
 
+            foreach(sprite; _fadingSprites)
+            {
+                sprite.update();
+            }
+
             _currentCustomer.update();
         }
     }
@@ -174,6 +187,7 @@ private static:
             _spritesheet.getSprite("cashregister").render();
             _spritesheet.getSprite("vhs").render();
             _spritesheet.getSprite("id").render();
+            _spritesheet.getSprite("money").render();
 
             foreach(window; _windows)
             {
@@ -184,9 +198,9 @@ private static:
         if (!_hasFocus)
         {
             RectangleShape overlay = new RectangleShape(Vector2f(_sfWindow.getSize()));
-            overlay.fillColor = Color(0, 0, 0, 220);
+            overlay.fillColor = Color(0, 0, 0, 150);
             _sfWindow.draw(overlay);
-            _infoText.render();
+            // _infoText.render();
         }
 
         _spritesheet.getSprite("cursor").render();
@@ -270,6 +284,8 @@ private static:
             (_sfWindow.getSize().x / 2) - _infoText.size.x / 2,
             500.0f
         );
+
+        _music.play();
     }
 
     void _pcClicked()
@@ -306,12 +322,15 @@ private static:
 
     void _customerReachedCounter()
     {
-
+        foreach(sprite; _fadingSprites)
+        {
+            sprite.fadeIn();
+        }
     }
 
     void _customerLeft()
     {
-
+        _newCustomer();
     }
 
     void _newCustomer()
@@ -326,6 +345,30 @@ private static:
             _currentCustomer.lastName,
             _currentCustomer.birth
         ]);
+
+        _idWindow.setChildSprites(
+            [_spritesheet.getSprite("head")] ~
+            _currentCustomer.face
+        );
+
+        _vhsWindow.setVHS(_currentCustomer.vhs);
+        
+        _currentCustomer.walk();
+    }
+
+    void _moneyClicked()
+    {
+        addMoney(10);
+
+        foreach(sprite; _fadingSprites)
+        {
+            sprite.fadeOut();
+        }
+
+        _currentCustomer.walk();
+
+        _vhsWindow.hide();
+        _idWindow.hide();
     }
 
 public static:
@@ -359,6 +402,11 @@ public static:
 
         _tick();
 
+        _music = Util.loadSound("./res/music.ogg");
+
+        _music.volume = 30;
+        _music.isLooping = true;
+
         _spritesheetTexture = Util.loadTexture("./res/spritesheet.png");
         _spritesheetTexture.setSmooth(true);
 
@@ -382,16 +430,24 @@ public static:
         _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("id"));
         _clickableSprites[$ - 1].onClick = &_idClicked;
 
+        _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("money"));
+        _clickableSprites[$ - 1].onClick = &_moneyClicked;
+
+        _fadingSprites ~= new FadingSprite(_spritesheet.getSprite("vhs"));
+        _fadingSprites ~= new FadingSprite(_spritesheet.getSprite("id"));
+        _fadingSprites ~= new FadingSprite(_spritesheet.getSprite("money"));
+
         _pcWindow = new Popup(POPUP_TYPE.PC, Vector2f(825.0f, 100.0f));
         _vhsWindow = new Popup(POPUP_TYPE.VHS, Vector2f(475.0f, 50.0f));
         _idWindow = new Popup(POPUP_TYPE.ID, Vector2f(100.0f, 150.0f));
 
+        _pcWindow.setText([new TextObject(format("Money: $%d.00", money), _font, 27, Vector2f(0,0))]);
+
         _windows[0] = _pcWindow;
         _windows[1] = _vhsWindow;
-        _windows[2] = _idWindow;
+        _windows[2] = _idWindow;        
 
-        _newCustomer();
-        _currentCustomer.walk();        
+        _newCustomer();  
 
         _loaded = true;
 
@@ -404,6 +460,13 @@ public static:
         {
             _tick();
         }
+    }
+
+    ///
+    void addMoney(uint amount)
+    {
+        _money += amount;
+        _pcWindow.setText([new TextObject(format("Money: $%d.00", money), _font, 27, Vector2f(0,0))]);
     }
 
     /// Public access to the SFML RenderWindow
@@ -448,5 +511,12 @@ public static:
     Font font()
     {
         return _font;
+    }
+
+    ///
+    @property
+    uint money()
+    {
+        return _money;
     }
 }
