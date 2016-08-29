@@ -16,7 +16,7 @@ import ludum.popup;
 import ludum.customer;
 
 /// An indicator of whether or not the game was compiled in debug mode
-public static const bool DEBUG_MODE = false;
+public static const bool DEBUG_MODE = true;
 
 private static enum GAME_STATE { INTRO, MENU, PLAY };
 
@@ -43,6 +43,8 @@ private static:
 
     Popup[3] _windows;
 
+    Customer _currentCustomer;
+
     POPUP_TYPE _currentWindow = POPUP_TYPE.NONE;
 
     bool _windowOrderChanged = false;
@@ -67,10 +69,7 @@ private static:
         {
             if(_state == GAME_STATE.MENU)
             {
-                _state = GAME_STATE.PLAY;
-
-                _spritesheet.getSprite("title").scale = 0.5;
-                _spritesheet.getSprite("title").position = Vector2f(94.25f, 50.0f);
+                _startGame();
             }
         }
 
@@ -82,6 +81,17 @@ private static:
         if(event.type == Event.EventType.GainedFocus)
         {
             _hasFocus = true;
+        }
+
+        if(event.type == Event.EventType.MouseButtonPressed)
+        {
+            if(event.mouseButton.button == Mouse.Button.Left)
+            {
+                if(!_hasFocus)
+                {
+                    writeln("Click on the window chrome to focus!");
+                }
+            }
         }
     }
 
@@ -129,6 +139,8 @@ private static:
             {
                 sprite.update();
             }
+
+            _currentCustomer.update();
         }
     }
 
@@ -154,6 +166,9 @@ private static:
             _sfWindow.draw(_background);
 
             _spritesheet.getSprite("title").render();
+
+            _currentCustomer.render();
+
             _spritesheet.getSprite("counter").render();
             _spritesheet.getSprite("pc").render();
             _spritesheet.getSprite("cashregister").render();
@@ -169,8 +184,9 @@ private static:
         if (!_hasFocus)
         {
             RectangleShape overlay = new RectangleShape(Vector2f(_sfWindow.getSize()));
-            overlay.fillColor = Color(0, 0, 0, 200);
+            overlay.fillColor = Color(0, 0, 0, 220);
             _sfWindow.draw(overlay);
+            _infoText.render();
         }
 
         _spritesheet.getSprite("cursor").render();
@@ -221,6 +237,25 @@ private static:
         }
     }
 
+    void _startGame()
+    {
+        _state = GAME_STATE.PLAY;
+
+        _spritesheet.getSprite("title").scale = 0.5;
+        _spritesheet.getSprite("title").position = Vector2f(94.25f, 50.0f);
+
+        _infoText.content = "Paused";
+        _infoText.textSize = 60;
+        _infoText.position = Vector2f(-99.0f, -99.0f);
+        _infoText.render();
+        _infoText.color = Color.White;
+
+        _infoText.position = Vector2f(
+            (_sfWindow.getSize().x / 2) - _infoText.size.x / 2,
+            (_sfWindow.getSize().y / 2) - _infoText.size.y / 2,
+        );
+    }
+
     void _introFinished()
     {
         _state = GAME_STATE.MENU;
@@ -267,6 +302,30 @@ private static:
     void _idClicked()
     {
         _idWindow.show();
+    }
+
+    void _customerReachedCounter()
+    {
+
+    }
+
+    void _customerLeft()
+    {
+
+    }
+
+    void _newCustomer()
+    {
+        _currentCustomer = new Customer;
+
+        _currentCustomer.onFinished = &_customerLeft;
+        _currentCustomer.onReachedCounter = &_customerReachedCounter;
+
+        _idWindow.setText([
+            _currentCustomer.firstName, 
+            _currentCustomer.lastName,
+            _currentCustomer.birth
+        ]);
     }
 
 public static:
@@ -323,23 +382,22 @@ public static:
         _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("id"));
         _clickableSprites[$ - 1].onClick = &_idClicked;
 
-        _loaded = true;
-
         _pcWindow = new Popup(POPUP_TYPE.PC, Vector2f(825.0f, 100.0f));
-        _vhsWindow = new Popup(POPUP_TYPE.VHS, Vector2f(475.0f, 250.0f));
+        _vhsWindow = new Popup(POPUP_TYPE.VHS, Vector2f(475.0f, 50.0f));
         _idWindow = new Popup(POPUP_TYPE.ID, Vector2f(100.0f, 150.0f));
 
         _windows[0] = _pcWindow;
         _windows[1] = _vhsWindow;
         _windows[2] = _idWindow;
 
-        Customer test = new Customer;
-        _idWindow.setText([test.firstName, test.lastName, test.birth]);
+        _newCustomer();
+        _currentCustomer.walk();        
+
+        _loaded = true;
 
         static if(DEBUG_MODE)
         {
-            _introFinished();
-            _state = GAME_STATE.PLAY;
+            _startGame();
         }
 
         while(_sfWindow.isOpen())
