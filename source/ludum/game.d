@@ -21,7 +21,7 @@ import ludum.animatedsprite;
 import ludum.transition;
 
 /// An indicator of whether or not the game was compiled in debug mode
-public static const bool DEBUG_MODE = true;
+public static const bool DEBUG_MODE = false;
 
 private static enum GAME_STATE { INTRO, MENU, PLAY, END };
 
@@ -418,6 +418,13 @@ private static:
 
         _vhsWindow.hide();
         _idWindow.hide();
+
+        auto cashRegister = _spritesheet.getSprite("cashregister");
+        if(cashRegister.frame != 0)
+        {
+            cashRegister.frame = 0;
+            cashRegister.position = cashRegister.position + Vector2f(28.0f, 0.0f);
+        }
     }
 
     void _dayFinished()
@@ -459,12 +466,41 @@ private static:
 
         _vhsWindow.hide();
         _idWindow.hide();
+
+        auto cashRegister = _spritesheet.getSprite("cashregister");
+        if(cashRegister.frame != 0)
+        {
+            cashRegister.frame = 0;
+            cashRegister.position = cashRegister.position + Vector2f(28.0f, 0.0f);
+        }
     }
 
     void _transitionDone()
     {
         _newCustomer();
         Popup.dayCycle.startDay();
+    }
+
+    void _moneyHovered()
+    {
+        auto cashRegister = _spritesheet.getSprite("cashregister");
+
+        if(cashRegister.frame == 0)
+        {
+            cashRegister.frame = 1;
+            cashRegister.position = cashRegister.position - Vector2f(28.0f, 0.0f);
+            _cashRegisterSound.play();
+        }
+    }
+
+    void _moneyLeft()
+    {
+        auto cashRegister = _spritesheet.getSprite("cashregister");
+        if(cashRegister.frame != 0)
+        {
+            cashRegister.frame = 0;
+            cashRegister.position = cashRegister.position + Vector2f(28.0f, 0.0f);
+        }
     }
 
 public static:
@@ -539,6 +575,8 @@ public static:
 
         _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("money"));
         _clickableSprites[$ - 1].onClick = &_moneyClicked;
+        _clickableSprites[$ - 1].onHover = &_moneyHovered;
+        _clickableSprites[$ - 1].onLeft = &_moneyLeft;
 
         _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("no"));
         _clickableSprites[$ - 1].onClick = &_rejected;

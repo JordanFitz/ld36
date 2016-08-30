@@ -27,7 +27,7 @@ public:
         _text = new TextObject("", Game.font, 27, Vector2f(0.0f, 0.0f));
         _timer = new Clock;
         _timer.restart();
-        _moneyGoal = 10;
+        _moneyGoal = 100;
     }
 
     ///
@@ -40,7 +40,7 @@ public:
 
         minutes = minutes >= 60 ? cast(long)(minutes - (floor(minutes / 60.0f) * 60)) : minutes; 
 
-        if(hours == 1)
+        if(hours == 8)
         {
             _day++;
             _dayEnded();

@@ -6,13 +6,23 @@ import ludum.popup: POPUP_TYPE;
 
 import dsfml.graphics: Vector2i, Mouse, Color;
 
+private void _nothing()
+{
+
+}
+
 /// A class to manage sprites that can be clicked on
 class ClickableSprite
 {
 private:
     AnimatedSprite _sprite;
     bool _clicked = false;
+    bool _left = true;
+    bool _hovered = false;
+
     void function() _callback;
+    void function() _hover;
+    void function() _leave;
 
 public:
     /**
@@ -23,6 +33,8 @@ public:
     this(AnimatedSprite sprite)
     {
         _sprite = sprite;
+        onHover = &_nothing;
+        onLeft = &_nothing;
     }
 
     /// Update the sprite
@@ -41,6 +53,14 @@ public:
         {
             _sprite.color = Color(255, 255, 255, _sprite.color.a);
 
+            _left = false;
+
+            if(!_hovered)
+            {
+                _hover();
+                _hovered = true;
+            }
+
             if(Mouse.isButtonPressed(Mouse.Button.Left))
             {
                 if(!_clicked)
@@ -56,6 +76,16 @@ public:
                 _clicked = false;
             }
         }
+        else
+        {
+            _hovered = false;
+
+            if(!_left)
+            {
+                _left = true;
+                _leave();
+            }
+        }
     }
 
     /// The click callback
@@ -63,5 +93,15 @@ public:
     void onClick(void function() callback)
     {
         _callback = callback;
+    }
+
+    @property onHover(void function() callback)
+    {
+        _hover = callback;
+    }
+
+    @property onLeft(void function() callback)
+    {
+        _leave = callback;
     }
 }
