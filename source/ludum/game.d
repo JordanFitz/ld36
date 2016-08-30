@@ -564,8 +564,8 @@ public static:
         _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("pc"));
         _clickableSprites[$ - 1].onClick = &_pcClicked;
 
-        _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("cashregister"));
-        _clickableSprites[$ - 1].onClick = &_cashRegisterClicked;
+        // _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("cashregister"));
+        // _clickableSprites[$ - 1].onClick = &_cashRegisterClicked;
 
         _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("vhs"));
         _clickableSprites[$ - 1].onClick = &_vhsClicked;
