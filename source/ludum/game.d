@@ -18,6 +18,7 @@ import ludum.customer;
 import ludum.daycycle;
 import ludum.fadingsprite;
 import ludum.animatedsprite;
+import ludum.transition;
 
 /// An indicator of whether or not the game was compiled in debug mode
 public static const bool DEBUG_MODE = true;
@@ -73,6 +74,8 @@ private static:
 
     TextObject _endText;
     TextObject _lossReasonText;
+
+    Transition _transition;
 
     void _handleEvent(Event event)
     {
@@ -218,6 +221,8 @@ private static:
 
                 Game.spritesheet.getSprite("strike").render();
             }
+
+            _transition.render();
         }
         else if (_state == GAME_STATE.END)
         {
@@ -430,8 +435,7 @@ private static:
                 sprite.fadeOut();
             }
 
-            _newCustomer();
-            Popup.dayCycle.startDay();
+            _transition.go();
         }
         else
         {
@@ -455,8 +459,12 @@ private static:
 
         _vhsWindow.hide();
         _idWindow.hide();
+    }
 
-        // Popup.dayCycle.startDay();
+    void _transitionDone()
+    {
+        _newCustomer();
+        Popup.dayCycle.startDay();
     }
 
 public static:
@@ -550,6 +558,9 @@ public static:
         _windows[1] = _vhsWindow;
         _windows[2] = _idWindow;
 
+        _transition = new Transition;
+        _transition.onMiddle = &_transitionDone;
+
         _newCustomer();  
 
         Popup.dayCycle.onDayEnded = &_dayFinished;
@@ -579,9 +590,10 @@ public static:
     {
         _strikes++;
 
-        if(_strikes > 3)
+        if(_strikes >= 3)
         {
             // game over pal
+            _lossReason = "You made too many mistakes!";
             _state = GAME_STATE.END;
         }
     }

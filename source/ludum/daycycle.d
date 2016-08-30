@@ -93,4 +93,10 @@ public:
     {
         return _moneyGoal;
     }
+
+    @property
+    uint day()
+    {
+        return _day;
+    }
 }
