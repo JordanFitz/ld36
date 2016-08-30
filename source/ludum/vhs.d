@@ -101,4 +101,17 @@ public:
         _titleText.color = Color.White;
         _titleText.render(false);
     }
+
+    uint getRequiredAge()
+    {
+        switch(_rating)
+        {
+            case RATING.E: return 0;
+            case RATING.R7: return 7;
+            case RATING.R13: return 13;
+            case RATING.R18: return 18;
+            case RATING.X: return 21;
+            default: assert(0);
+        }
+    }
 }

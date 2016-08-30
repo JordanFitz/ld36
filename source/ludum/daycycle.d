@@ -27,17 +27,20 @@ public:
         _text = new TextObject("", Game.font, 27, Vector2f(0.0f, 0.0f));
         _timer = new Clock;
         _timer.restart();
+        _moneyGoal = 10;
     }
 
     ///
     string getTime()
     {
-        const long hours = _timer.getElapsedTime().total!"minutes";
-        long minutes = _timer.getElapsedTime().total!"seconds";
+        // const long hours = _timer.getElapsedTime().total!"minutes";
+        // long minutes = _timer.getElapsedTime().total!"seconds" * 2;
+        long minutes = cast(long) floor(_timer.getElapsedTime().total!"msecs" / 500.0f);
+        long hours = cast(long) floor(minutes / 60.0f);
 
         minutes = minutes >= 60 ? cast(long)(minutes - (floor(minutes / 60.0f) * 60)) : minutes; 
 
-        if(hours == 8)
+        if(hours == 1)
         {
             _day++;
             _dayEnded();
@@ -52,6 +55,7 @@ public:
     void startDay()
     {
         _timer.restart();
+        _moneyGoal += 50;
     }
 
     ///
@@ -66,7 +70,7 @@ public:
         _text.color = Color(0,213,34);
         _text.render(false);
 
-        _text.content = format("Day %d", _day);
+        _text.content = format("Day %d, 1985", _day);
         _text.color = Color.Transparent;
         _text.render(false);
 

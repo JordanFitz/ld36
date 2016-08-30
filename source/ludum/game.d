@@ -17,11 +17,12 @@ import ludum.popup;
 import ludum.customer;
 import ludum.daycycle;
 import ludum.fadingsprite;
+import ludum.animatedsprite;
 
 /// An indicator of whether or not the game was compiled in debug mode
-public static const bool DEBUG_MODE = false;
+public static const bool DEBUG_MODE = true;
 
-private static enum GAME_STATE { INTRO, MENU, PLAY };
+private static enum GAME_STATE { INTRO, MENU, PLAY, END };
 
 /// The wrapper class to contain the SFML RenderWindow and
 /// handle updates, rendering and events
@@ -56,14 +57,22 @@ private static:
     bool _overlayDrawn = false;
     float _delta = 1.0f;
 
+    string _lossReason = "You did not make enough money!";
+
     ClickableSprite[] _clickableSprites;
     FadingSprite[] _fadingSprites;
 
     GAME_STATE _state;
 
     uint _money;
+    uint _strikes;
+
+    AnimatedSprite[3] _strikeSprites;
 
     Sound _music;
+
+    TextObject _endText;
+    TextObject _lossReasonText;
 
     void _handleEvent(Event event)
     {
@@ -184,6 +193,7 @@ private static:
 
             _spritesheet.getSprite("counter").render();
             _spritesheet.getSprite("pc").render();
+            _spritesheet.getSprite("no").render();
             _spritesheet.getSprite("cashregister").render();
             _spritesheet.getSprite("vhs").render();
             _spritesheet.getSprite("id").render();
@@ -193,6 +203,35 @@ private static:
             {
                 window.render();
             }
+
+            for(uint i = 0; i < 3; i++)
+            {
+                AnimatedSprite strike = Game.spritesheet.getSprite("strike");
+
+                strike.position = Vector2f(_sfWindow.getSize().x - 15.0f - strike.rect.width - i * 30.0f, 15.0f);
+                strike.color = Color(255, 255, 255, 75);
+
+                if(i < _strikes)
+                {
+                    Game.spritesheet.getSprite("strike").color = Color(255, 255, 255, 255);
+                }
+
+                Game.spritesheet.getSprite("strike").render();
+            }
+        }
+        else if (_state == GAME_STATE.END)
+        {
+            _sfWindow.clear();
+
+            _endText.position = Vector2f(_sfWindow.getSize().x / 2 - _endText.size.x / 2, 300.0f);
+            _endText.render();
+
+            _lossReasonText.color = Color.Transparent;
+            _lossReasonText.content = _lossReason;
+            _lossReasonText.render();
+            _lossReasonText.color = Color.White;
+            _lossReasonText.position = Vector2f(_sfWindow.getSize().x / 2 - _lossReasonText.size.x / 2, 370.0f);
+            _lossReasonText.render();
         }
 
         if (!_hasFocus)
@@ -358,6 +397,11 @@ private static:
 
     void _moneyClicked()
     {
+        if(_currentCustomer.getAge() < _currentCustomer.vhs.getRequiredAge())
+        {
+            strike();
+        }
+
         addMoney(10);
 
         foreach(sprite; _fadingSprites)
@@ -369,6 +413,50 @@ private static:
 
         _vhsWindow.hide();
         _idWindow.hide();
+    }
+
+    void _dayFinished()
+    {
+        if(_money >= Popup.dayCycle.goal)
+        {
+            _money = 0;
+            
+            _pcWindow.hide();
+            _vhsWindow.hide();
+            _idWindow.hide();
+
+             foreach(sprite; _fadingSprites)
+            {
+                sprite.fadeOut();
+            }
+
+            _newCustomer();
+            Popup.dayCycle.startDay();
+        }
+        else
+        {
+            _state = GAME_STATE.END;
+        }
+    }
+
+    void _rejected()
+    {
+        if(_currentCustomer.getAge() >= _currentCustomer.vhs.getRequiredAge())
+        {
+            strike();
+        }
+
+        foreach(sprite; _fadingSprites)
+        {
+            sprite.fadeOut();
+        }
+
+        _currentCustomer.walk();
+
+        _vhsWindow.hide();
+        _idWindow.hide();
+
+        // Popup.dayCycle.startDay();
     }
 
 public static:
@@ -396,16 +484,27 @@ public static:
         _infoText.render();
         _infoText.color = Color.White;
 
+        _endText = new TextObject("GAME OVER", _font, 60, Vector2f(0,0));
+        _endText.render();
+        _endText.color = Color.White;
+
+        _lossReasonText = new TextObject("", _font, 40, Vector2f(0,0));
+        _lossReasonText.render();
+        _lossReasonText.color = Color.White;
+
         _infoText.position = Vector2f(
             (_sfWindow.getSize() / 2) - _infoText.size / 2
         );
 
         _tick();
 
-        _music = Util.loadSound("./res/music.ogg");
+        static if(!DEBUG_MODE)
+        {
+            _music = Util.loadSound("./res/music.ogg");
 
-        _music.volume = 30;
-        _music.isLooping = true;
+            _music.volume = 25;
+            _music.isLooping = true;
+        }
 
         _spritesheetTexture = Util.loadTexture("./res/spritesheet.png");
         _spritesheetTexture.setSmooth(true);
@@ -433,9 +532,13 @@ public static:
         _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("money"));
         _clickableSprites[$ - 1].onClick = &_moneyClicked;
 
+        _clickableSprites ~= new ClickableSprite(_spritesheet.getSprite("no"));
+        _clickableSprites[$ - 1].onClick = &_rejected;
+
         _fadingSprites ~= new FadingSprite(_spritesheet.getSprite("vhs"));
         _fadingSprites ~= new FadingSprite(_spritesheet.getSprite("id"));
         _fadingSprites ~= new FadingSprite(_spritesheet.getSprite("money"));
+        _fadingSprites ~= new FadingSprite(_spritesheet.getSprite("no"));
 
         _pcWindow = new Popup(POPUP_TYPE.PC, Vector2f(825.0f, 100.0f));
         _vhsWindow = new Popup(POPUP_TYPE.VHS, Vector2f(475.0f, 50.0f));
@@ -445,9 +548,11 @@ public static:
 
         _windows[0] = _pcWindow;
         _windows[1] = _vhsWindow;
-        _windows[2] = _idWindow;        
+        _windows[2] = _idWindow;
 
         _newCustomer();  
+
+        Popup.dayCycle.onDayEnded = &_dayFinished;
 
         _loaded = true;
 
@@ -467,6 +572,18 @@ public static:
     {
         _money += amount;
         _pcWindow.setText([new TextObject(format("Money: $%d.00", money), _font, 27, Vector2f(0,0))]);
+    }
+
+    ///
+    void strike()
+    {
+        _strikes++;
+
+        if(_strikes > 3)
+        {
+            // game over pal
+            _state = GAME_STATE.END;
+        }
     }
 
     /// Public access to the SFML RenderWindow

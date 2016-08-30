@@ -27,6 +27,8 @@ private:
     string _lastName;
     string _birth;
 
+    uint _birthYear;
+
     AnimatedSprite[] _face;
 
     bool _walking = false;
@@ -78,6 +80,7 @@ public:
         }
 
         _birth = format("%d", year);
+        _birthYear = year;
 
         if(uniform(0, 10) == 0)
         {
@@ -215,5 +218,11 @@ public:
     VHS vhs()
     {
         return _vhs;
+    }
+
+    ///
+    uint getAge()
+    {
+        return 1985 - _birthYear;
     }
 }
