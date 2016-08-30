@@ -27,7 +27,7 @@ public:
         _text = new TextObject("", Game.font, 27, Vector2f(0.0f, 0.0f));
         _timer = new Clock;
         _timer.restart();
-        _moneyGoal = 100;
+        _moneyGoal = 50;
     }
 
     ///
@@ -55,7 +55,7 @@ public:
     void startDay()
     {
         _timer.restart();
-        _moneyGoal += 50;
+        _moneyGoal += 10;
     }
 
     ///
