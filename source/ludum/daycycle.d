@@ -20,6 +20,8 @@ private:
 
     uint _moneyGoal;
 
+    bool _ended = false;
+
 public:
     ///
     this()
@@ -27,7 +29,7 @@ public:
         _text = new TextObject("", Game.font, 27, Vector2f(0.0f, 0.0f));
         _timer = new Clock;
         _timer.restart();
-        _moneyGoal = 50;
+        _moneyGoal = 60;
     }
 
     ///
@@ -40,8 +42,9 @@ public:
 
         minutes = minutes >= 60 ? cast(long)(minutes - (floor(minutes / 60.0f) * 60)) : minutes; 
 
-        if(hours == 8)
+        if(!_ended && hours >= 8)
         {
+            _ended = true;
             _day++;
             _dayEnded();
         }
@@ -56,6 +59,7 @@ public:
     {
         _timer.restart();
         _moneyGoal += 10;
+        _ended = false;
     }
 
     ///

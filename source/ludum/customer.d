@@ -153,7 +153,7 @@ public:
         Game.spritesheet.getSprite("head").scale = 1.0f;
 
         Game.spritesheet.getSprite("head").position = 
-            Game.spritesheet.getSprite("body").position - Vector2f(8.0f, 155.0f);
+            Game.spritesheet.getSprite("body").position - Vector2f(15.0f, 155.0f);
 
         Game.spritesheet.getSprite("body").render();
         Game.spritesheet.getSprite("head").render();

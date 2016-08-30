@@ -430,14 +430,12 @@ private static:
     void _dayFinished()
     {
         if(_money >= Popup.dayCycle.goal)
-        {
-            _money = 0;
-            
+        {            
             _pcWindow.hide();
             _vhsWindow.hide();
             _idWindow.hide();
 
-             foreach(sprite; _fadingSprites)
+            foreach(sprite; _fadingSprites)
             {
                 sprite.fadeOut();
             }
@@ -477,6 +475,9 @@ private static:
 
     void _transitionDone()
     {
+        _money = 0;
+        _pcWindow.setText([new TextObject(format("Money: $%d.00", money), _font, 27, Vector2f(0,0))]);
+
         _newCustomer();
         Popup.dayCycle.startDay();
     }

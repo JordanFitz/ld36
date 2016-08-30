@@ -55,6 +55,7 @@ public:
                 {
                     _overlay.fillColor = Color.Transparent;
                     _running = false;
+                    _timer = null;
                 }
             }
         }
@@ -76,9 +77,12 @@ public:
     ///
     void go()
     {
+        _timer = new Clock;
         _running = true;
+        _reachedMiddle = false;
     }
 
+    ///
     @property
     void onMiddle(void function() callback)
     {
